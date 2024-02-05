@@ -36,7 +36,7 @@ app.get('/points', (req, res) => {
         .from('crystall_ball.lagoon_inventory')
         // .limit(1000)
         // .whereBetween('population', [filters.from, filters.to])
-        .whereIn('fips', db.distinct('fips').from('crystall_ball.drought_polygons').whereBetween('DSCI', [filters.from, filters.to]))
+        .whereIn('fips', db.distinct('fips').from('crystall_ball.drought_polygons').whereBetween('dsci', [filters.from, filters.to]))
         .then((data) => {
             res.json(data);
         })
@@ -55,7 +55,7 @@ app.get('/polygons', (req, res) => {
 
     db.select('*')
         .from('crystall_ball.drought_polygons')
-        .whereBetween('DSCI', [filters.from, filters.to])
+        .whereBetween('dsci', [filters.from, filters.to])
         .then((data) => {
             res.json(data);
         })
