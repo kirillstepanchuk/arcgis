@@ -15,28 +15,25 @@ const db = knex({
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-// CORS implemented so that we don't get errors when trying to access the server from a different server location
 app.use(cors());
 
-//SELECT *
-// FROM lagoon_inventory li
-// WHERE li.fips IN (
-//     SELECT DISTINCT d.fips
-//     FROM drought d
-//     WHERE d.dsci BETWEEN '100' AND '200'
-// );
 app.get('/points', (req, res) => {
 
     const filters = {
-        from: req.query.populationFrom || 0,
-        to: req.query.populationTo || 99999,
+        population: {
+            from: req.query.populationFrom || 0,
+            to: req.query.populationTo || 99999,
+        },
+        dsci: {
+            from: req.query.dsciFrom || 0,
+            to: req.query.dsciTo || 999999,
+        }
     };
 
     db.select('*')
         .from('crystall_ball.lagoon_inventory')
-        // .limit(1000)
-        // .whereBetween('population', [filters.from, filters.to])
-        .whereIn('fips', db.distinct('fips').from('crystall_ball.drought_polygons').whereBetween('dsci', [filters.from, filters.to]))
+        .whereIn('fips', db.distinct('fips').from('crystall_ball.drought_polygons').whereBetween('dsci', [filters.dsci.from, filters.dsci.to]))
+        .andWhereBetween('population', [filters.population.from, filters.population.to])
         .then((data) => {
             res.json(data);
         })
@@ -49,13 +46,22 @@ app.get('/points', (req, res) => {
 app.get('/polygons', (req, res) => {
 
     const filters = {
-        from: req.query.dsciFrom || 0,
-        to: req.query.dsciTo || 999999,
+        population: {
+            from: req.query.populationFrom || 0,
+            to: req.query.populationTo || 99999,
+        },
+        dsci: {
+            from: req.query.dsciFrom || 0,
+            to: req.query.dsciTo || 999999,
+        }
     };
 
     db.select('*')
+        // .from('crystall_ball.drought_polygons')
+        // .whereBetween('dsci', [filters.dsci.from, filters.dsci.to])
         .from('crystall_ball.drought_polygons')
-        .whereBetween('dsci', [filters.from, filters.to])
+        .whereIn('fips', db.distinct('fips').from('crystall_ball.lagoon_inventory').whereBetween('population', [filters.population.from, filters.population.to]))
+        .andWhereBetween('dsci', [filters.dsci.from, filters.dsci.to])
         .then((data) => {
             res.json(data);
         })
@@ -63,5 +69,27 @@ app.get('/polygons', (req, res) => {
             console.log(err);
         });
 });
+
+app.get('/min-max-dsci', (req, res) => {
+    db('crystall_ball.drought_polygons').max('dsci').min('dsci')
+        .then((data) => {
+            res.json(data?.[0]);
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+})
+app.get('/min-max-population', (req, res) => {
+    db('crystall_ball.lagoon_inventory').max('population').min('population')
+        .then((data) => {
+            res.json(data?.[0]);
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+})
+
 const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server running on port ${port}, http://localhost:${port}`));
+app.listen(port, () => {
+    console.log(`Server running on port ${port}, http://localhost:${port}`)
+});

@@ -71,6 +71,9 @@ const getPolygons = (data: any[]) => {
     })
 }
 
+const SERVER_URL = 'http://localhost:5000'
+// const SERVER_URL = 'https://arcgis-app-server.onrender.com'
+
 export const Map = () => {
     const mapDiv = useRef(null);
 
@@ -85,20 +88,42 @@ export const Map = () => {
     const [showPoints, setShowPoints] = useState<boolean>(true);
     const [showPolygons, setShowPolygons] = useState<boolean>(false);
 
+    const { data: dsciData } = useQuery({
+        queryKey: ['min-max-dsci'],
+        queryFn: () => {
+            const url = new URL(`${SERVER_URL}/min-max-dsci`)
+
+            return fetch(url).then((res) => res.json())
+        },
+    })
+
+    const { data: populationData } = useQuery({
+        queryKey: ['min-max-population'],
+        queryFn: () => {
+            const url = new URL(`${SERVER_URL}/min-max-population`)
+
+            return fetch(url).then((res) => res.json())
+        },
+    })
+    console.log(dsciData, populationData);
 
     const { isLoading: isPolygonsPending, refetch: refetchPolygons, isRefetching: isPolygonsRefetching } = useQuery({
         queryKey: ['polygons'],
         queryFn: () => {
-            // const polygonsUrl = new URL('http://localhost:5000/polygons')
+            const polygonsUrl = new URL(`${SERVER_URL}/polygons`)
 
-            const polygonsUrl = new URL('https://arcgis-app-server.onrender.com/polygons')
-
-                let polygonsParams: any = {};
+            let polygonsParams: any = {};
             if (dsciFrom){
                 polygonsParams.dsciFrom = dsciFrom;
             }
             if (dsciTo){
                 polygonsParams.dsciTo = dsciTo;
+            }
+            if (populationFrom){
+                polygonsParams.populationFrom = populationFrom;
+            }
+            if (populationFrom){
+                polygonsParams.populationTo = populationTo;
             }
             polygonsUrl.search = new URLSearchParams(polygonsParams).toString();
 
@@ -116,9 +141,15 @@ export const Map = () => {
     const { isLoading: isPointsPending, refetch: refetchPoints, isRefetching: isPointsRefetching } = useQuery({
         queryKey: ['points'],
         queryFn: () => {
-            // const pointsUrl = new URL('http://localhost:5000/points')
-            const pointsUrl = new URL('https://arcgis-app-server.onrender.com/points')
+            const pointsUrl = new URL(`${SERVER_URL}/points`)
+
             let pointsParams: any = {};
+            if (dsciFrom){
+                pointsParams.dsciFrom = dsciFrom;
+            }
+            if (dsciTo){
+                pointsParams.dsciTo = dsciTo;
+            }
             if (populationFrom){
                 pointsParams.populationFrom = populationFrom;
             }
@@ -142,13 +173,10 @@ export const Map = () => {
         enabled: !!map?.initialized && showPoints,
     })
 
-
-
-
     useEffect(() => {
         if (mapDiv.current) {
             const map = new ArcGisMap({
-                basemap: "dark-gray-vector"
+                basemap: "streets"
             });
             setMap(map);
 
@@ -209,8 +237,6 @@ export const Map = () => {
             Visibility
             <div>Lagoons <input type="checkbox" checked={showPoints} onChange={() => setShowPoints((prev)=> !prev)} /></div>
             <div>Drought <input type="checkbox" checked={showPolygons} onChange={() => setShowPolygons((prev)=> !prev)} /></div>
-
-            {/*<button disabled={loadingPoints || loadingPolygons} type="button" onClick={onFilterButtonClick}>{loadingPoints || loadingPolygons ? 'Loading':'Show'}</button>*/}
         </div>
 
         {(showPoints || showPolygons) && (<div style={{
@@ -229,7 +255,7 @@ export const Map = () => {
             <div>Filters</div>
             {showPoints && (
                 <>
-                    DSCI (Lagoons crossfilter)
+                    Population {!!dsciData && (`(${dsciData.min} - ${dsciData.max})`)}
                     <input placeholder="from" type="number" value={populationFrom} onChange={(evt) => setPopulationFrom(evt.target.value)}/>
                     <input placeholder="to" type="number" value={populationTo} onChange={(evt) => setPopulationTo(evt.target.value)}/>
                 </>
@@ -237,7 +263,7 @@ export const Map = () => {
 
             {showPolygons && (
                 <>
-                    DSCI (Drought)
+                    DSCI {!!populationData && (`(${populationData.min} - ${populationData.max})`)}
                     <input placeholder="from" type="number" value={dsciFrom} onChange={(evt) => setDsciFrom(evt.target.value)}/>
                     <input placeholder="to" type="number" value={dsciTo} onChange={(evt) => setDsciTo(evt.target.value)}/>
                 </>
