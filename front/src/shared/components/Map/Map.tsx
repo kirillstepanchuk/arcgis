@@ -71,8 +71,8 @@ const getPolygons = (data: any[]) => {
     })
 }
 
-const SERVER_URL = 'http://localhost:5000'
-// const SERVER_URL = 'https://arcgis-app-server.onrender.com'
+// const SERVER_URL = 'http://localhost:5000'
+const SERVER_URL = 'https://arcgis-app-server.onrender.com'
 
 export const Map = () => {
     const mapDiv = useRef(null);
