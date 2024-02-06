@@ -255,7 +255,7 @@ export const Map = () => {
             <div>Filters</div>
             {showPoints && (
                 <>
-                    Population {!!dsciData && (`(${dsciData.min} - ${dsciData.max})`)}
+                    Population {!!populationData && (`(${populationData.min} - ${populationData.max})`)}
                     <input placeholder="from" type="number" value={populationFrom} onChange={(evt) => setPopulationFrom(evt.target.value)}/>
                     <input placeholder="to" type="number" value={populationTo} onChange={(evt) => setPopulationTo(evt.target.value)}/>
                 </>
@@ -263,7 +263,7 @@ export const Map = () => {
 
             {showPolygons && (
                 <>
-                    DSCI {!!populationData && (`(${populationData.min} - ${populationData.max})`)}
+                    DSCI {!!dsciData && (`(${dsciData.min} - ${dsciData.max})`)}
                     <input placeholder="from" type="number" value={dsciFrom} onChange={(evt) => setDsciFrom(evt.target.value)}/>
                     <input placeholder="to" type="number" value={dsciTo} onChange={(evt) => setDsciTo(evt.target.value)}/>
                 </>
